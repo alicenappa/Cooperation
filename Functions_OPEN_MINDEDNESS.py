@@ -4,10 +4,13 @@ import matplotlib.pyplot as plt
 import random
 import math
 import ternary
+from Functions_sirbu_loreto import *
 from scipy.cluster.hierarchy import linkage, fcluster
 from scipy.spatial.distance import pdist
 from mpl_toolkits.mplot3d import Axes3D
 from scipy.spatial.distance import pdist, squareform
+
+
 def entropy(vec):
     '''calcola l'entropia di shannon di un vettore di probabilità'''
     K = len(vec)
@@ -65,46 +68,9 @@ def calculate_total_overlap(population):
     overlap = (2*somma) / (N*(N-1))
     return overlap
 
-def interact_individuals_old(i1, i2, eps, alpha):
-#print('vector i1' , i1 , 'interacts with vector i2' , i2)
-    K = len(i1)  # Numero totale di elementi
-    o_ij = calculate_overlap(i1, i2)
-    signo = random.choice([-1, +1])
-    p_agree = min(1, max(0, o_ij + eps*signo))
-    l = random.choice(range(K))
-    # Calcolo della variazione delta
-    if abs(i2[l] - i1[l]) > alpha:
-        delta = alpha * np.sign(i2[l] - i1[l])
-        
-    else:
-        delta = 0.5 * (i2[l] - i1[l])
-    
-    i1_new = i1.copy()
-    resto = 0 
-    # Modifica dell'elemento selezionato
-    if random.random() < p_agree:
-        i1_new[l] += delta
-        beta = delta  
-    else:
-        i1_new[l] -= delta
-        beta = -delta 
-        
-    if i1_new[l] < 0: 
-        resto += i1_new[l]
-        i1_new[l] = 0
-        
-    if i1_new[l] >= 1:
-       
-        i1_new = np.zeros(len(i1_new))
-        i1_new[l] = 1
-        return i1_new
-    
-    i1_last = update(np.array(i1_new) , l , beta - resto)
-    
-#    print(sum(i1_last))
-    return np.array(i1_last) 
 
-def interact_individuals(i1, i1_index, i2, eps, alpha , storico_interaction ,t , mu):
+
+def interact_individuals_om(i1, i1_index, i2, eps, alpha , storico_interaction ,t , mu):
     #parameter definition 
     K = len(i1)  
     l = random.choice(range(K))
@@ -133,7 +99,7 @@ def interact_individuals(i1, i1_index, i2, eps, alpha , storico_interaction ,t ,
     # DEFINE TWO KINDS OF INTERACTION POSSIBLE: OM OR NORMAL 
     if random.random() < p_open_minded:   #open minded interaction
         interaction_type = 'om'
-        p_agree = 0.2
+        p_agree = 0.5
         if random.random() < p_agree:
             i1_new[l] += delta
             beta = delta  
@@ -170,6 +136,8 @@ def interact_individuals(i1, i1_index, i2, eps, alpha , storico_interaction ,t ,
     
     return np.array(i1_last), interaction_type , d , w
 
+
+
 def evolve_population( pop_iniz , time , eps, alpha ,mu):
     pop_finale =  np.copy(pop_iniz)
     storico = {}
@@ -187,7 +155,7 @@ def evolve_population( pop_iniz , time , eps, alpha ,mu):
         # più avanti, subito prima di appendere il risultato:
         storico_interaction[i1_index].setdefault(t, [])
         # ora posso fare
-        i1_new , interaction , distance , w = interact_individuals(i1, i1_index, i2, eps, alpha , storico_interaction , t , mu)
+        i1_new , interaction , distance , w = interact_individuals_om(i1, i1_index, i2, eps, alpha , storico_interaction , t , mu)
         storico_interaction[i1_index][t].append([interaction, distance , i2_index ,w ])
         
        # print('storico interaction',storico_interaction)
@@ -243,7 +211,9 @@ def plot_simplesso_with_ax(population, ax, title):
     #tax.top_corner_label("$p_2$", fontsize=12)
     #tax.left_corner_label("$p_3$", fontsize=12)
     tax.set_title(title, fontsize=10)
-    
+
+
+'''
 def update(x , l , delta):
    # print('update x l delta ' ,  x , l , delta)
     K = len(x)
@@ -274,7 +244,7 @@ def update(x , l , delta):
       #  print(sum(x))
     return x     
 
-
+'''
 
 
 
@@ -356,7 +326,7 @@ def interact_with_info(i1, eps, alpha, I, PI):
         sources = I[:K]  # Select the first K sources from I
         overlaps = [calculate_overlap(i1, src) for src in sources]
         max_index = overlaps.index(max(overlaps))  
-        i1_updated = interact_individuals_old(i1, i2=I[max_index], eps=eps, alpha=alpha)
+        i1_updated , o , p = interact_individuals(i1, i2=I[max_index], eps=eps, alpha=alpha)
         return i1_updated
     return i1
 
@@ -367,7 +337,7 @@ def interact_with_random_info(i1, eps, alpha, I, PI):
         K = len(i1)
         sources = I[:K]  # Select the first K sources from I
         i2 =  random.randint(0, K-1)  
-        i1_updated = interact_individuals_old(i1, i2, eps=eps, alpha=alpha)
+        i1_updated , o , p= interact_individuals(i1, i2, eps=eps, alpha=alpha)
         return i1_updated
     else: 
         return i1
@@ -425,13 +395,13 @@ def evolve_population_with_info_and_peer_openm( pop_iniz , time , eps, alpha , I
 
        
         storico_interaction[i1_index].setdefault(t, [])
-        i1_new , interaction , distance,w  = interact_individuals(i1, i1_index, i2, eps, alpha , storico_interaction , t , mu)
+        i1_new , interaction , distance,w  = interact_individuals_om(i1, i1_index, i2, eps, alpha , storico_interaction , t , mu)
         storico_interaction[i1_index][t].append([interaction, distance , i2_index ,w ])
         
        # print('storico interaction',storico_interaction)
         pop_finale[i1_index] = i1_new
-    
-        pop_finale[i3_index] =  interact_with_info(i3 , eps, alpha , I , PI ) 
+        ii = interact_with_info(i3 , eps, alpha , I , PI )
+        pop_finale[i3_index] =   ii
         storico[t] = np.copy(pop_finale)
     return pop_finale   , storico  , storico_interaction
 
