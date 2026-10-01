@@ -1,0 +1,13 @@
+# Runtime dependencies, pinned to versions verified on Python 3.11.15 (2026-10-01).
+# Both function modules import and Functions_explained.ipynb /
+# MODELLO_SIRBU_LORETO_con_OPEN_MINDEDNESS.ipynb execute end to end with these.
+numpy==2.4.6
+scipy==1.17.1
+matplotlib==3.11.2
+python-ternary==1.0.8
+# Only needed by Cross_community_retweets.ipynb
+pandas==3.0.6
+pyarrow==25.0.1
+networkx==3.6.1
+python-louvain==0.16
+scikit-learn==1.9.1
