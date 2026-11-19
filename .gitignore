@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# OS
+.DS_Store
+
+# Generated outputs: figures and derived data are rebuilt from code,
+# they live outside this repo (../figures, ../data/derived)
+*.png
+*.pdf
+data/
+figures/
+
+# Raw data is never committed
+*.parquet
+*.csv
+lista_leader.txt
